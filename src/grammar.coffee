@@ -90,6 +90,7 @@ grammar =
     o 'Expression'
     o 'Statement'
     o 'YieldReturn'
+    o 'AwaitReturn'
   ]
 
   # Pure statements which cannot be expressions.
@@ -127,11 +128,8 @@ grammar =
   ]
 
   Await: [
-    # o 'AWAIT', -> new Op $1, new Value new Literal ''
     o 'AWAIT Expression', -> new Op $1, $2
   ]
-
-  # AwaitReturn
 
   # An indented block of expressions. Note that the [Rewriter](rewriter.html)
   # will convert some postfix forms into blocks for us, by adjusting the
@@ -223,6 +221,12 @@ grammar =
   YieldReturn: [
     o 'YIELD RETURN Expression',                -> new YieldReturn $3
     o 'YIELD RETURN',                           -> new YieldReturn
+  ]
+
+  # Await return syntax
+  AwaitReturn: [
+    o 'AWAIT RETURN Expression', -> new AwaitReturn $3
+    o 'AWAIT RETURN', -> new AwaitReturn
   ]
 
   # A block comment.

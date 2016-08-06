@@ -491,6 +491,12 @@ exports.YieldReturn = class YieldReturn extends Return
       @error 'yield can only occur inside functions'
     super
 
+exports.AwaitReturn = class AwaitReturn extends Return
+  compileNode: (o) ->
+    unless o.scope.parent?
+      @error 'await can only occur inside functions'
+    super
+
 #### Value
 
 # A value, variable or literal or parenthesized, indexed or dotted into,
@@ -1452,7 +1458,7 @@ exports.Code = class Code extends Base
     @isGenerator = !!@body.contains (node) ->
       (node instanceof Op and node.isYield()) or node instanceof YieldReturn
     @isAwait = !!@body.contains (node) ->
-      (node instanceof Op and do node.isAwait)
+      (node instanceof Op and do node.isAwait) or node instanceof AwaitReturn
 
   children: ['params', 'body']
 
