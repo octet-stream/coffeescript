@@ -1451,6 +1451,8 @@ exports.Code = class Code extends Base
     @bound       = tag is 'boundfunc'
     @isGenerator = !!@body.contains (node) ->
       (node instanceof Op and node.isYield()) or node instanceof YieldReturn
+    @isAwait = !!@body.contains (node) ->
+      (node instanceof Op and do node.isAwait)
 
   children: ['params', 'body']
 
@@ -1518,6 +1520,7 @@ exports.Code = class Code extends Base
     @body.makeReturn() unless wasEmpty or @noReturn
     code = 'function'
     code += '*' if @isGenerator
+    code = "async #{code}" if @isAwait
     code += ' ' + @name if @ctor
     code += '('
     answer = [@makeCode(code)]
@@ -1772,6 +1775,8 @@ exports.Op = class Op extends Base
   isYield: ->
     @operator in ['yield', 'yield*']
 
+  isAwait: -> @operator in ['await']
+
   isUnary: ->
     not @second
 
@@ -1840,6 +1845,7 @@ exports.Op = class Op extends Base
       message = isUnassignable @first.unwrapAll().value
       @first.error message if message
     return @compileYield     o if @isYield()
+    return @compileAwait o if do @isAwait
     return @compileUnary     o if @isUnary()
     return @compileChain     o if isChain
     switch @operator
@@ -1908,6 +1914,23 @@ exports.Op = class Op extends Base
       parts.push @first.compileToFragments o, LEVEL_OP
       parts.push [@makeCode ")"] if o.level >= LEVEL_PAREN
     @joinFragmentArrays parts, ''
+
+  compileAwait: (o) ->
+    parts = []
+    op = @operator
+    unless o.scope.parent?
+      @error 'await can only occur inside functions'
+    if 'expression' in Object.keys(@first) and not (@first instanceof Throw)
+      if @first.expression?
+        parts.push @first.expression.compileToFragments o, LEVEL_OP
+    else
+      parts.push [@makeCode "("] if o.level >= LEVEL_PAREN
+      parts.push [@makeCode op]
+      parts.push [@makeCode " "] if @first.base?.value isnt ''
+      parts.push @first.compileToFragments o, LEVEL_OP
+      parts.push [@makeCode ")"] if o.level >= LEVEL_PAREN
+    @joinFragmentArrays parts, ''
+
 
   compilePower: (o) ->
     # Make a Math.pow call

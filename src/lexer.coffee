@@ -771,7 +771,7 @@ exports.isUnassignable = isUnassignable
 JS_KEYWORDS = [
   'true', 'false', 'null', 'this'
   'new', 'delete', 'typeof', 'in', 'instanceof'
-  'return', 'throw', 'break', 'continue', 'debugger', 'yield'
+  'return', 'throw', 'break', 'continue', 'debugger', 'yield', 'await'
   'if', 'else', 'switch', 'for', 'while', 'do', 'try', 'catch', 'finally'
   'class', 'extends', 'super'
 ]
@@ -802,7 +802,7 @@ COFFEE_KEYWORDS = COFFEE_KEYWORDS.concat COFFEE_ALIASES
 RESERVED = [
   'case', 'default', 'function', 'var', 'void', 'with', 'const', 'let', 'enum'
   'export', 'import', 'native', 'implements', 'interface', 'package', 'private'
-  'protected', 'public', 'static'
+  'protected', 'public', 'static', 'async'
 ]
 
 STRICT_PROSCRIBED = ['arguments', 'eval']

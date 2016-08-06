@@ -117,6 +117,7 @@ grammar =
     o 'Class'
     o 'Throw'
     o 'Yield'
+    o 'Await'
   ]
 
   Yield: [
@@ -124,6 +125,13 @@ grammar =
     o 'YIELD Expression',                       -> new Op $1, $2
     o 'YIELD FROM Expression',                  -> new Op $1.concat($2), $3
   ]
+
+  Await: [
+    # o 'AWAIT', -> new Op $1, new Value new Literal ''
+    o 'AWAIT Expression', -> new Op $1, $2
+  ]
+
+  # AwaitReturn
 
   # An indented block of expressions. Note that the [Rewriter](rewriter.html)
   # will convert some postfix forms into blocks for us, by adjusting the
@@ -642,6 +650,7 @@ operators = [
   ['left',      'LOGIC']
   ['nonassoc',  'INDENT', 'OUTDENT']
   ['right',     'YIELD']
+  ['right', 'AWAIT']
   ['right',     '=', ':', 'COMPOUND_ASSIGN', 'RETURN', 'THROW', 'EXTENDS']
   ['right',     'FORIN', 'FOROF', 'BY', 'WHEN']
   ['right',     'IF', 'ELSE', 'FOR', 'WHILE', 'UNTIL', 'LOOP', 'SUPER', 'CLASS']
