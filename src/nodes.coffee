@@ -1924,6 +1924,8 @@ exports.Op = class Op extends Base
     @joinFragmentArrays parts, ''
 
   compileAwait: (o) ->
+    # TEMPORARILY WAY
+    utility 'regeneratorRuntime', o if o.regenerator
     parts = []
     op = @operator
     unless o.scope.parent?
@@ -2408,6 +2410,10 @@ UTILITIES =
   # Shortcuts to speed up the lookup time for native functions.
   hasProp: -> '{}.hasOwnProperty'
   slice  : -> '[].slice'
+
+  # TEMPORARILY WAY
+  regeneratorRuntime: ->
+    'require(\'regenerator-runtime\')'
 
 # Levels indicate a node's position in the AST. Useful for knowing if
 # parens are necessary or superfluous.
