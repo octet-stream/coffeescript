@@ -35,6 +35,7 @@ SWITCHES = [
   ['-b', '--bare',            'compile without a top-level function wrapper']
   ['-c', '--compile',         'compile to JavaScript and save as .js files']
   ['-e', '--eval',            'pass a string from the command line as input']
+  ['-g', '--regenerator',     'use regenerator compiler'] # Experemental
   ['-h', '--help',            'display this help message']
   ['-i', '--interactive',     'run an interactive CoffeeScript REPL']
   ['-j', '--join [FILE]',     'concatenate the source CoffeeScript before compiling']
@@ -415,6 +416,7 @@ compileOptions = (filename, base) ->
     header: opts.compile and not opts['no-header']
     sourceMap: opts.map
     inlineMap: opts['inline-map']
+    regenerator: opts.regenerator
   }
   if filename
     if base

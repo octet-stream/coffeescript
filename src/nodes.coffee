@@ -5,6 +5,8 @@
 
 Error.stackTraceLimit = Infinity
 
+regeneratorRuntime = require 'regenerator-runtime'
+
 {Scope} = require './scope'
 {isUnassignable, JS_FORBIDDEN} = require './lexer'
 

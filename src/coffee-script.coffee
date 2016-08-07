@@ -11,6 +11,8 @@ path          = require 'path'
 helpers       = require './helpers'
 SourceMap     = require './sourcemap'
 
+regenerator = require 'regenerator'
+
 # The current CoffeeScript version number.
 exports.VERSION = '1.10.0'
 
@@ -101,6 +103,8 @@ exports.compile = compile = withPrettyErrors (code, options) ->
     sourceMapDataURI = "//# sourceMappingURL=data:application/json;base64,#{encoded}"
     sourceURL = "//# sourceURL=#{options.filename ? 'coffeescript'}"
     js = "#{js}\n#{sourceMapDataURI}\n#{sourceURL}"
+
+  js = regenerator.compile(js).code if options.regenerator # temporarily way
 
   if options.sourceMap
     {
