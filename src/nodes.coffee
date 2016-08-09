@@ -1533,7 +1533,6 @@ exports.Code = class Code extends Base
     code += '*' if @isGenerator
     code += '*' if @isAwait and not o.generator
     code = "async #{code}" if @isAwait and o.generator
-    # console.log if @isAwait and not o.regenerator then "#{utility 'asyncWrap', o}(function* {})" else ''
     code += ' ' + @name if @ctor
     code += '('
     answer = [@makeCode(code)]
