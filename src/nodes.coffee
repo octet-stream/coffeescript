@@ -1526,9 +1526,14 @@ exports.Code = class Code extends Base
       node.error "multiple parameters named #{name}" if name in uniqs
       uniqs.push name
     @body.makeReturn() unless wasEmpty or @noReturn
-    code = 'function'
+    code = if @isAwait and not o.generator
+      "#{utility 'asyncWrap', o}(function"
+    else
+      'function'
     code += '*' if @isGenerator
-    code = "async #{code}" if @isAwait
+    code += '*' if @isAwait and not o.generator
+    code = "async #{code}" if @isAwait and o.generator
+    # console.log if @isAwait and not o.regenerator then "#{utility 'asyncWrap', o}(function* {})" else ''
     code += ' ' + @name if @ctor
     code += '('
     answer = [@makeCode(code)]
@@ -1537,7 +1542,7 @@ exports.Code = class Code extends Base
       answer.push p...
     answer.push @makeCode ') {'
     answer = answer.concat(@makeCode("\n"), @body.compileWithDeclarations(o), @makeCode("\n#{@tab}")) unless @body.isEmpty()
-    answer.push @makeCode '}'
+    answer.push @makeCode "}#{if @isAwait and not o.generator then ')' else ''}"
 
     return [@makeCode(@tab), answer...] if @ctor
     if @front or (o.level >= LEVEL_ACCESS) then @wrapInBraces answer else answer
@@ -1925,7 +1930,7 @@ exports.Op = class Op extends Base
 
   compileAwait: (o) ->
     # TEMPORARILY WAY
-    utility 'regeneratorRuntime', o if o.regenerator
+    console.log utility 'regeneratorRuntime', o if o.regenerator
     parts = []
     op = @operator
     unless o.scope.parent?
@@ -1935,7 +1940,7 @@ exports.Op = class Op extends Base
         parts.push @first.expression.compileToFragments o, LEVEL_OP
     else
       parts.push [@makeCode "("] if o.level >= LEVEL_PAREN
-      parts.push [@makeCode op]
+      parts.push [@makeCode if o.regenerator then op else 'yield']
       parts.push [@makeCode " "] if @first.base?.value isnt ''
       parts.push @first.compileToFragments o, LEVEL_OP
       parts.push [@makeCode ")"] if o.level >= LEVEL_PAREN
@@ -2414,6 +2419,62 @@ UTILITIES =
   # TEMPORARILY WAY
   regeneratorRuntime: ->
     'require(\'regenerator-runtime\')'
+
+  asyncWrap: -> "
+    (function(){
+      function typeOf(value) {
+        return {}.toString.call(value).slice(8, -1).toLowerCase();
+      }
+
+      function isPromise(obj) {
+        return typeOf(obj) === 'promise';
+      }
+
+      function isGeneratorFunction(fn) {
+        return typeOf(fn) === 'generatorfunction';
+      }
+
+      function __async(gen) {
+        var args = [].slice.call(arguments, 1),
+          ctx = this;
+        return new Promise(function(_res, _rej) {
+          if (isGeneratorFunction(gen)) gen = gen.apply(ctx, args);
+
+          resolve();
+
+          function resolve(res) {
+            try {
+              var nextYield = gen.next(res);
+            } catch (err) {
+              return _rej(err);
+            }
+            __next(nextYield);
+          }
+
+          function reject(err) {
+            try {
+              var nextYield = gen.throw(err);
+            } catch (e) {
+              return _rej(e);
+            }
+
+            __next(nextYield);
+          }
+
+          function __next(nextYield) {
+            if (nextYield.done) return _res(nextYield.value);
+
+            var value = nextYield.value;
+            if (value && isPromise(value)) value.then(resolve, reject);
+          }
+        });
+      }
+
+      return function (gen){
+        return __async.bind(this, gen);
+      };
+    })();
+  "
 
 # Levels indicate a node's position in the AST. Useful for knowing if
 # parens are necessary or superfluous.
