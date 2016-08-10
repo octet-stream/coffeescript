@@ -2433,46 +2433,44 @@ UTILITIES =
         return typeOf(fn) === 'generatorfunction';
       }
 
-      function __async(gen) {
-        var args = [].slice.call(arguments, 1),
-          ctx = this;
-        return new Promise(function(_res, _rej) {
-          if (isGeneratorFunction(gen)) gen = gen.apply(ctx, args);
+      return function(gen) {
+        return function() {
+          var args = [].slice.call(arguments),
+            ctx = this;
+          return new Promise(function(_res, _rej) {
+            if (isGeneratorFunction(gen)) gen = gen.apply(ctx, args);
 
-          resolve();
+            resolve();
 
-          function resolve(res) {
-            try {
-              var nextYield = gen.next(res);
-            } catch (err) {
-              return _rej(err);
-            }
-            __next(nextYield);
-          }
-
-          function reject(err) {
-            try {
-              var nextYield = gen.throw(err);
-            } catch (e) {
-              return _rej(e);
+            function resolve(res) {
+              try {
+                var nextYield = gen.next(res);
+              } catch (err) {
+                return _rej(err);
+              }
+              __next(nextYield);
             }
 
-            __next(nextYield);
-          }
+            function reject(err) {
+              try {
+                var nextYield = gen.throw(err);
+              } catch (e) {
+                return _rej(e);
+              }
 
-          function __next(nextYield) {
-            if (nextYield.done) return _res(nextYield.value);
+              __next(nextYield);
+            }
 
-            var value = nextYield.value;
-            if (value && isPromise(value)) value.then(resolve, reject);
-          }
-        });
-      }
+            function __next(nextYield) {
+              if (nextYield.done) return _res(nextYield.value);
 
-      return function (gen){
-        return __async.bind(this, gen);
+              var value = nextYield.value;
+              if (value && isPromise(value)) value.then(resolve, reject);
+            }
+          });
+        };
       };
-    })();
+    })()
   "
 
 # Levels indicate a node's position in the AST. Useful for knowing if
