@@ -2419,6 +2419,7 @@ UTILITIES =
   regeneratorRuntime: ->
     'require(\'regenerator-runtime\')'
 
+  # This polyfill based on https://github.com/tj/co
   asyncWrap: -> "
     (function(){
       function typeOf(value) {
@@ -2429,44 +2430,44 @@ UTILITIES =
         return typeOf(obj) === 'promise';
       }
 
-      function isGeneratorFunction(fn) {
-        return typeOf(fn) === 'generatorfunction';
-      }
-
-      return function(gen) {
-        return function() {
-          var args = [].slice.call(arguments),
-            ctx = this;
-          return new Promise(function(_res, _rej) {
-            if (isGeneratorFunction(gen)) gen = gen.apply(ctx, args);
-
-            resolve();
-
-            function resolve(res) {
+      return function(fn) {
+        return function asyncWrap() {
+          var gen = fn.apply(this, arguments);
+          return new Promise(function(resolve, reject) {
+            function onFulfilled(res) {
               try {
                 var nextYield = gen.next(res);
               } catch (err) {
-                return _rej(err);
+                return reject(err);
               }
-              __next(nextYield);
+
+              next(nextYield);
             }
 
-            function reject(err) {
+            function onRejeted(err) {
               try {
                 var nextYield = gen.throw(err);
-              } catch (e) {
-                return _rej(e);
+              } catch (err) {
+                return reject(err);
               }
 
-              __next(nextYield);
+              next(nextYield);
             }
 
-            function __next(nextYield) {
-              if (nextYield.done) return _res(nextYield.value);
+            function next(nextYield) {
+              if (nextYield.done) {
+                return resolve(nextYield.value);
+              }
 
               var value = nextYield.value;
-              if (value && isPromise(value)) value.then(resolve, reject);
+              if (value && isPromise(value)) {
+                return Promise.resolve(value).then(onFulfilled, onRejeted);
+              }
+
+              return onRejeted(new TypeError('You may use only Promise.'));
             }
+
+            return onFulfilled();
           });
         };
       };
