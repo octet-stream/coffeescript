@@ -2422,16 +2422,8 @@ UTILITIES =
   # This polyfill based on https://github.com/tj/co
   asyncWrap: -> "
     (function(){
-      function typeOf(value) {
-        return {}.toString.call(value).slice(8, -1).toLowerCase();
-      }
-
-      function isPromise(obj) {
-        return typeOf(obj) === 'promise';
-      }
-
       return function(fn) {
-        return function asyncWrap() {
+        return function() {
           var gen = fn.apply(this, arguments);
           return new Promise(function(resolve, reject) {
             function onFulfilled(res) {
@@ -2460,11 +2452,7 @@ UTILITIES =
               }
 
               var value = nextYield.value;
-              if (value && isPromise(value)) {
-                return Promise.resolve(value).then(onFulfilled, onRejeted);
-              }
-
-              return onRejeted(new TypeError('You may use only Promise.'));
+              return Promise.resolve(value).then(onFulfilled, onRejeted);
             }
 
             return onFulfilled();
