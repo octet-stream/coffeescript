@@ -1534,6 +1534,7 @@ exports.Code = class Code extends Base
     code += '*' if @isAwait and not o.generator
     code = "async #{code}" if @isAwait and o.generator
     code += ' ' + @name if @ctor
+    code += ' ' if @isAwait or @isGenerator
     code += '('
     answer = [@makeCode(code)]
     for p, i in params
@@ -1929,7 +1930,7 @@ exports.Op = class Op extends Base
 
   compileAwait: (o) ->
     # TEMPORARILY WAY
-    console.log utility 'regeneratorRuntime', o if o.regenerator
+    utility 'regeneratorRuntime', o if o.regenerator
     parts = []
     op = @operator
     unless o.scope.parent?
@@ -2399,9 +2400,11 @@ UTILITIES =
 
   # Discover if an item is in an array.
   indexOf: -> "
-    [].indexOf || function(item) {
+    Array.prototype.indexOf || function(item) {
       for (var i = 0, l = this.length; i < l; i++) {
-        if (i in this && this[i] === item) return i;
+        if (i in this && this[i] === item) {
+          return i
+        };
       }
       return -1;
     }
@@ -2412,8 +2415,8 @@ UTILITIES =
   """
 
   # Shortcuts to speed up the lookup time for native functions.
-  hasProp: -> '{}.hasOwnProperty'
-  slice  : -> '[].slice'
+  hasProp: -> 'Object.prototype.hasOwnProperty'
+  slice  : -> 'Array.prototype.slice'
 
   # TEMPORARILY WAY
   regeneratorRuntime: ->
