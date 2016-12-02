@@ -2421,7 +2421,7 @@ UTILITIES =
         return __ref.call(arr, val);
       }
 
-      for (let __v of arr) {
+      for (var __v of arr) {
         if (__v === val || (isNaN(__v) && isNaN(val))) {
           return true;
         }
