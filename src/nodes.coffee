@@ -1992,8 +1992,8 @@ exports.In = class In extends Base
 
   compileLoopTest: (o) ->
     [sub, ref] = @object.cache o, LEVEL_LIST
-    fragments = [].concat @makeCode(utility('includes', o) + "("), @array.compileToFragments(o, LEVEL_LIST),
-      @makeCode(", "), ref, @makeCode(") " + if @negated then '=== false' else '=== true')
+    fragments = [].concat @makeCode(utility('indexOf', o) + ".call("), @array.compileToFragments(o, LEVEL_LIST),
+      @makeCode(", "), ref, @makeCode(") " + if @negated then '< 0' else '>= 0')
     return fragments if fragmentsToText(sub) is fragmentsToText(ref)
     fragments = sub.concat @makeCode(', '), fragments
     if o.level < LEVEL_LIST then fragments else @wrapInBraces fragments
@@ -2379,27 +2379,24 @@ UTILITIES =
       for (var key in parent) {
         if (#{utility 'hasProp', o}.call(parent, key)) child[key] = parent[key];
       }
-
       function ctor() {
         this.constructor = child;
       }
-
       ctor.prototype = parent.prototype;
       child.prototype = new ctor();
       child.__super__ = parent.prototype;
-
       return child;
     }
   "
 
   # Create a function bound to the current value of "this".
-  bind: -> "
-    function(fn, ctx){
+  bind: -> '
+    function(fn, me){
       return function(){
-        return fn.apply(ctx, arguments);
+        return fn.apply(me, arguments);
       };
     }
-  "
+  '
 
   # Discover if an item is in an array.
   indexOf: -> "
@@ -2413,31 +2410,13 @@ UTILITIES =
     }
   "
 
-  # Check if value includes in array
-  includes: -> "
-    function includes(arr, val) {
-      var __ref = Array.prototype.includes;
-      if (typeof __ref === \"function\") {
-        return __ref.call(arr, val);
-      }
-
-      for (var __v of arr) {
-        if (__v === val || (isNaN(__v) && isNaN(val))) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-  "
-
   modulo: -> """
     function(a, b) { return (+a % (b = +b) + b) % b; }
   """
 
   # Shortcuts to speed up the lookup time for native functions.
   hasProp: -> 'Object.prototype.hasOwnProperty'
-  slice: -> 'Array.prototype.slice'
+  slice  : -> 'Array.prototype.slice'
 
   # TEMPORARILY WAY
   regeneratorRuntime: ->
@@ -2456,29 +2435,23 @@ UTILITIES =
               } catch (err) {
                 return reject(err);
               }
-
               next(nextYield);
             }
-
             function onRejeted(err) {
               try {
                 var nextYield = gen.throw(err);
               } catch (err) {
                 return reject(err);
               }
-
               next(nextYield);
             }
-
             function next(nextYield) {
               if (nextYield.done) {
                 return resolve(nextYield.value);
               }
-
               var value = nextYield.value;
               return Promise.resolve(value).then(onFulfilled, onRejeted);
             }
-
             return onFulfilled();
           });
         };
